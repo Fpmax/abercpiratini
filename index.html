@@ -388,7 +388,47 @@
         height: 40px;
       }
     }
-  </style>
+
+    /* Estilos para a aba Mensalistas */
+    .mensalistas-table th,
+    .mensalistas-table td {
+      text-align: center;
+      padding: 15px;
+    }
+
+    .mensalistas-table th {
+      background-color: var(--primary-color);
+      color: white;
+      width: auto;
+    }
+
+    .mensalistas-table td:first-child {
+      width: 70%;
+    }
+
+    .mensalistas-table td:last-child {
+      width: 30%;
+    }
+
+    .situacao-pago {
+      color: var(--success-color);
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .situacao-pendente {
+      color: var(--secondary-color);
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    /* Ajustes gerais para centralizar textos */
+    .simple-table th, 
+    .simple-table td {
+      text-align: center;
+      padding: 12px 15px;
+    }
+    </style>
 </head>
 <body>
   <header>
@@ -411,6 +451,9 @@
       <button onclick="mostrar('tabela-simples')">
         <i class="fas fa-table"></i> Tabela Simples
       </button>
+          <button onclick="mostrar('mensalistas')">
+        <i class="fas fa-money-bill"></i> Mensalistas
+      </button>
     </nav>
   </header>
 
@@ -432,8 +475,8 @@
     // Variável global para armazenar os dados da API
     let apiData = null;
     let isLoading = false;
-    const API_URL = "https://script.google.com/macros/s/AKfycbw-2KU8f75etq_SbyvK4QuYCgTopEDuKlA2lfeIKlsMc44DmB4WgeQ-sIi1srYwZLdp/exec";
-
+		const API_URL = "https://script.google.com/macros/s/AKfycbw-2KU8f75etq_SbyvK4QuYCgTopEDuKlA2lfeIKlsMc44DmB4WgeQ-sIi1srYwZLdp/exec";
+  
     // Função para buscar dados da API
     async function fetchData() {
       if (apiData && !isLoading) return apiData;
@@ -828,6 +871,56 @@
                   }
                 });
                 table += '</tr>';
+              });
+
+              table += '</tbody></table>';
+              content.innerHTML = table;
+            } catch (error) {
+              console.error("Erro:", error);
+              content.innerHTML = "<p>Erro ao carregar os dados.</p>";
+            }
+            break;
+          
+          case 'mensalistas':
+            content.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i> Carregando mensalistas...</div>';
+
+            try {
+              const response = await fetch(API_URL);
+              const data = await response.json();
+
+              if (data.error) {
+                content.innerHTML = `<p>Erro ao carregar dados: ${data.error}</p>`;
+                return;
+              }
+
+              if (!Array.isArray(data) || data.length === 0) {
+                content.innerHTML = "<p>Nenhum dado encontrado.</p>";
+                return;
+              }
+
+              let table = '<h2><i class="fas fa-money-bill"></i> Mensalistas</h2><table class="simple-table mensalistas-table"><thead><tr>';
+              const headers = ["Nome", "Situação"];
+
+              headers.forEach(header => {
+                table += `<th>${header}</th>`;
+              });
+              table += '</tr></thead><tbody>';
+
+              data.forEach(row => {
+                const nome = row.Nome || row.Jogador || row.JOGADOR || 'Sem nome';
+                const situacao = row.Situação || row.SITUAÇÃO || row.Situacao || 'Pendente';
+
+                let situacaoFormatada = '';
+                if (situacao.toLowerCase() === 'pago') {
+                  situacaoFormatada = '<span class="situacao-pago">PAGO</span>';
+                } else {
+                  situacaoFormatada = '<span class="situacao-pendente">PENDENTE</span>';
+                }
+
+                table += `<tr>
+                  <td style="text-align: center;">${nome}</td>
+                  <td style="text-align: center;">${situacaoFormatada}</td>
+                </tr>`;
               });
 
               table += '</tbody></table>';
